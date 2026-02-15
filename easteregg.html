@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lobby - Meu Portfólio</title>
+  <title>Easteregg</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="vaporwave">
   <header>
-    <h1>🎮 Meu Portfólio</h1>
+    <h1>Easteregg</h1>
     <nav>
       <a href="{{ url_for('index') }}">Lobby</a>
       <a href="{{ url_for('games') }}">Games</a>
@@ -20,8 +20,17 @@
   </header>
 
   <main>
-    <h2>Bem-vindo ao Lobby</h2>
-    <p>Explore minhas paixões: games, música e projetos criativos.</p>
+    <h2>Saturno</h2>
+
+<audio autoplay loop>
+  <source src="{{ url_for('static', filename='musica.mp3.mp3') }}" type="audio/mpeg">
+
+</audio>
+
+    <!-- Aqui vai o GIF -->
+    <img src="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExdHluNGJveTMwdGNqcHV3aXNjYmN3anZuNGYxa3JjZ2xxbDZyZWE5dCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/s2uampOAMWksU/giphy.gif"
+         alt="GIF Vaporwave"
+         class="gif-vaporwave">
   </main>
 
   <footer>

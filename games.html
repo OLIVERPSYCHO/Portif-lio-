@@ -3,46 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <title>Games - Meu Portfólio</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body class="vaporwave">
   <header>
     <h1>🎮 Games</h1>
     <nav>
-      <a href="index.html">Lobby</a>
-      <a href="games.html">Games</a>
-      <a href="playlist.html">Playlist</a>
-      <a href="projetos.html">Meus Projetos</a>
+      <a href="{{ url_for('index') }}">Lobby</a>
+      <a href="{{ url_for('games') }}">Games</a>
+      <a href="{{ url_for('playlist') }}">Playlist</a>
+      <a href="{{ url_for('projetos') }}">Meus Projetos</a>
+      <a href="{{ url_for('anuncios') }}">Anúncios</a>
+      <a href="{{ url_for('easteregg') }}">Esteregg</a>
     </nav>
   </header>
 
   <main>
     <h2>Jogue direto aqui!</h2>
-    <p>Experimente alguns clássicos retrô:</p>
+    <p>Escolha um jogo para jogar:</p>
 
-    <!-- Exemplo de embed -->
-    <iframe src="https://www.retrogames.cz/play_492-DOS.php" 
-            width="800" height="600" 
-            frameborder="0" allowfullscreen>
-    </iframe>
+    <div class="game-links">
+      <a href="{{ url_for('snake') }}" class="game-link">🐍 Snake (Nokia Style)</a>
+      <a href="{{ url_for('tictactoe') }}" class="game-link">✖️◯ Jogo da Velha</a>
+      <a href="{{ url_for('hangman') }}" class="game-link">🔤 Forca</a>
+      <!-- Adicione mais jogos aqui -->
+    </div>
   </main>
 
   <footer>
     <p>&copy; 2026 - Meu Portfólio</p>
   </footer>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
-
-<div class="joystick">
-  <button id="up">⬆️</button>
-  <div>
-    <button id="left">⬅️</button>
-    <button id="right">➡️</button>
-  </div>
-  <button id="down">⬇️</button>
-</div>
-
-<div class="buttons">
-  <button id="btnA">A</button>
-  <button id="btnB">B</button>
-</div>

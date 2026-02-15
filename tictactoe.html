@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Jogo da Velha</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    .board { display: grid; grid-template-columns: repeat(3, 100px); gap: 10px; justify-content: center; margin: 20px auto; animation: fadeIn 1s; }
+    .cell { width: 100px; height: 100px; background: rgba(255,255,255,0.03); display:flex; align-items:center; justify-content:center; font-size:36px; cursor:pointer; border:2px solid rgba(255,255,255,0.05); transition: all 0.3s; animation: fadeIn 0.5s; }
+    .cell:hover { background: rgba(255,0,255,0.2); transform: scale(1.05); }
+    .cell.win { background: linear-gradient(135deg,#00ffff,#ff00ff); color:#000; animation: winPulse 1s infinite; }
+    .status { text-align:center; margin:10px; animation: fadeIn 0.5s; }
+    @media (max-width:480px){ .board{grid-template-columns:repeat(3,80px)} .cell{width:80px;height:80px;font-size:28px} }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes winPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+  </style>
+</head>
+<body class="vaporwave">
+  <header>
+    <h1>✖️◯ Jogo da Velha</h1>
+    <nav>
+      <a href="{{ url_for('index') }}">Lobby</a>
+      <a href="{{ url_for('games') }}">Games</a>
+      <a href="{{ url_for('playlist') }}">Playlist</a>
+      <a href="{{ url_for('projetos') }}">Meus Projetos</a>
+      <a href="{{ url_for('anuncios') }}">Anúncios</a>
+      <a href="{{ url_for('easteregg') }}">Esteregg</a>
+    </nav>
+  </header>
+  <main>
+    <div style="text-align:center; margin-bottom:10px;">
+      <label for="mode">Modo:</label>
+      <select id="mode">
+        <option value="pvp">2 Jogadores</option>
+        <option value="ai_o">Vs IA (IA = O)</option>
+        <option value="ai_x">Vs IA (IA = X)</option>
+      </select>
+    </div>
+    <div class="status">Vez de: <span id="turn">X</span></div>
+    <div class="board" id="board">
+      <div class="cell" data-i="0"></div>
+      <div class="cell" data-i="1"></div>
+      <div class="cell" data-i="2"></div>
+      <div class="cell" data-i="3"></div>
+      <div class="cell" data-i="4"></div>
+      <div class="cell" data-i="5"></div>
+      <div class="cell" data-i="6"></div>
+      <div class="cell" data-i="7"></div>
+      <div class="cell" data-i="8"></div>
+    </div>
+    <div style="text-align:center;margin-top:10px;"><button id="reset" class="btn">Recomeçar</button></div>
+  </main>
+  <footer><p>&copy; 2026 - Meu Portfólio</p></footer>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+  <script>
+    const boardEl = document.getElementById('board');
+    const cells = Array.from(document.querySelectorAll('.cell'));
+    const turnEl = document.getElementById('turn');
+    const modeSelect = document.getElementById('mode');
+    let board = Array(9).fill(null);
+    let turn = 'X';
+    const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+    function checkWin() {
+      for (const combo of wins) {
+        const [a,b,c] = combo;
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) return combo;
+      }
+      return null;
+    }
+
+    function getAvailableMoves(b) { return b.map((v,i)=> v?null:i).filter(v=>v!==null); }
+
+    function minimax(b, player, aiSymbol, humanSymbol) {
+      const win = checkWinBoard(b);
+      if (win === aiSymbol) return {score: 1};
+      if (win === humanSymbol) return {score: -1};
+      if (!b.includes(null)) return {score: 0};
+
+      const moves = [];
+      for (let i=0;i<9;i++){
+        if (b[i]===null){
+          const nb = b.slice(); nb[i]=player;
+          const result = minimax(nb, player===aiSymbol?humanSymbol:aiSymbol, aiSymbol, humanSymbol);
+          moves.push({index:i, score: result.score});
+        }
+      }
+
+      // choose best depending on player
+      if (player === aiSymbol){
+        let best = moves.reduce((a,c)=> c.score>a.score?c:a, moves[0]);
+        return best;
+      } else {
+        let best = moves.reduce((a,c)=> c.score<a.score?c:a, moves[0]);
+        return best;
+      }
+    }
+
+    function checkWinBoard(b){
+      for (const combo of wins){ const [a,b1,c]=combo; if (b[a] && b[a]===b[b1] && b[a]===b[c]) return b[a]; }
+      return null;
+    }
+
+    function aiMove() {
+      const mode = modeSelect.value;
+      const aiSymbol = mode === 'ai_o' ? 'O' : 'X';
+      const humanSymbol = aiSymbol === 'X' ? 'O' : 'X';
+      if (checkWin() || !board.includes(null)) return;
+      const best = minimax(board.slice(), aiSymbol, aiSymbol, humanSymbol);
+      const idx = best.index;
+      if (idx!==undefined){
+        playAt(idx, aiSymbol);
+      }
+    }
+
+    function playAt(i, symbol){
+      if (board[i] || checkWin()) return false;
+      board[i]=symbol;
+      const cell = cells[i];
+      cell.textContent = symbol;
+      try{ playPlace(); }catch(e){}
+      const win = checkWin();
+      if (win) { win.forEach(idx=>cells[idx].classList.add('win')); try{ playWin(); }catch(e){} }
+      turn = turn === 'X' ? 'O' : 'X';
+      turnEl.textContent = turn;
+      return true;
+    }
+
+    function handleClick(e){
+      const i = Number(e.target.dataset.i);
+      const mode = modeSelect.value;
+      if (board[i] || checkWin()) return;
+
+      if (mode === 'pvp'){
+        playAt(i, turn);
+        return;
+      }
+
+      // vs AI
+      const aiSymbol = mode === 'ai_o' ? 'O' : 'X';
+      const humanSymbol = aiSymbol === 'X' ? 'O' : 'X';
+
+      // if it's human's turn, and human plays
+      if (turn === humanSymbol){
+        playAt(i, humanSymbol);
+        // after player's move, let AI move
+        if (!checkWin() && board.includes(null)){
+          setTimeout(aiMove, 250);
+        }
+      }
+    }
+
+    cells.forEach(c=>c.addEventListener('click', handleClick));
+
+    // reset and mode changes
+    function resetBoard(){
+      board = Array(9).fill(null);
+      cells.forEach(c=>{c.textContent='';c.classList.remove('win')});
+      const mode = modeSelect.value;
+      // default start is X
+      if (mode === 'ai_x'){
+        // AI plays X and starts
+        turn = 'X'; turnEl.textContent = turn; setTimeout(aiMove, 300);
+      } else {
+        turn = 'X'; turnEl.textContent = turn;
+      }
+    }
+
+    document.getElementById('reset').addEventListener('click', ()=>{ resetBoard(); });
+    modeSelect.addEventListener('change', ()=>{ resetBoard(); });
+
+    // init
+    resetBoard();
+
+  </script>
+</body>
+</html>

@@ -2,13 +2,13 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lobby - Meu Portfólio</title>
+  <title>Meus Projetos - Meu Portfólio</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body class="vaporwave">
   <header>
-    <h1>🎮 Meu Portfólio</h1>
+    <h1>💻 Meus Projetos</h1>
     <nav>
       <a href="{{ url_for('index') }}">Lobby</a>
       <a href="{{ url_for('games') }}">Games</a>
@@ -20,8 +20,24 @@
   </header>
 
   <main>
-    <h2>Bem-vindo ao Lobby</h2>
-    <p>Explore minhas paixões: games, música e projetos criativos.</p>
+    <h2>Projetos que desenvolvi</h2>
+    <p>Aqui estão alguns dos meus trabalhos criativos:</p>
+
+    <div class="projects">
+      <div class="project">
+        <h3>Portfólio Vaporwave</h3>
+        <p>Este site! Um portfólio com tema retrô 90s.</p>
+        <a href="{{ url_for('index') }}">Ver</a>
+      </div>
+
+      <div class="project">
+        <h3>Jogo Retro</h3>
+        <p>Um jogo simples inspirado em clássicos DOS.</p>
+        <a href="{{ url_for('games') }}">Jogar</a>
+      </div>
+
+      <!-- Adicione mais projetos aqui -->
+    </div>
   </main>
 
   <footer>

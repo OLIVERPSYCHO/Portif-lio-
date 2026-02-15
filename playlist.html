@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Playlist - Meu Portfólio</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .music-player { text-align: center; margin: 20px; }
+    .playlist { margin-top: 20px; }
+    .playlist ul { list-style: none; padding: 0; }
+    .playlist li { margin: 10px 0; }
+    .playlist a { color: #00ffff; text-decoration: none; font-size: 16px; transition: color 0.3s; }
+    .playlist a:hover { color: #ff00ff; }
+    .current-song { font-weight: bold; color: #ff00ff; }
+  </style>
+<body class="vaporwave">
+  <header>
+    <h1>🎵 Playlist</h1>
+    <nav>
+      <a href="{{ url_for('index') }}">Lobby</a>
+      <a href="{{ url_for('games') }}">Games</a>
+      <a href="{{ url_for('playlist') }}">Playlist</a>
+      <a href="{{ url_for('projetos') }}">Meus Projetos</a>
+      <a href="{{ url_for('anuncios') }}">Anúncios</a>
+      <a href="{{ url_for('easteregg') }}">Esteregg</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2>Ouça minhas músicas favoritas</h2>
+    <p>Selecione uma música para tocar:</p>
+
+    <div class="music-player">
+      <audio controls id="music-player">
+        <source src="{{ url_for('static', filename='musica.mp3.mp3') }}" type="audio/mpeg">
+        Seu navegador não suporta o elemento audio.
+      </audio>
+
+      <div class="playlist">
+        <h3>Playlist</h3>
+        <ul id="playlist-list">
+          <li><a href="#" onclick="playSong('space_oddity.mp3', this)">🎵 Space Oddity - David Bowie</a></li>
+          <!-- Adicione mais músicas baixando arquivos para static/ e listando aqui -->
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 - Meu Portfólio</p>
+  </footer>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+  <script>
+    let currentLink = null;
+    function playSong(song, link) {
+      const player = document.getElementById('music-player');
+      player.src = `/static/${song}`;
+      player.play();
+      // Remover destaque anterior
+      if (currentLink) currentLink.classList.remove('current-song');
+      // Destacar atual
+      link.classList.add('current-song');
+      currentLink = link;
+    }
+    // Iniciar com a primeira música destacada
+    document.addEventListener('DOMContentLoaded', () => {
+      const firstLink = document.querySelector('#playlist-list a');
+      if (firstLink) playSong('musica.mp3.mp3', firstLink);
+    });
+  </script>
+  </script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Forca</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    .word { font-size: 28px; letter-spacing: 10px; text-align:center; margin:20px; animation: fadeIn 0.5s; }
+    .letters { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; max-width:400px; margin:0 auto; }
+    .letters button { padding:8px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.03); color:#fff; transition: all 0.3s; }
+    .letters button:hover { background: rgba(255,0,255,0.2); transform: scale(1.1); }
+    .letters button:disabled { opacity: 0.5; }
+    .status { text-align:center; margin:10px; animation: fadeIn 0.5s; }
+    .hint { text-align:center; margin:10px; font-style:italic; color:#ff00ff; animation: fadeIn 0.5s; }
+    .level { text-align:center; margin:10px; font-weight:bold; color:#00ffff; animation: fadeIn 0.5s; }
+    .shake { animation: shake 0.5s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+  </style>
+</head>
+<body class="vaporwave">
+  <header>
+    <h1>🔤 Forca</h1>
+    <nav>
+      <a href="{{ url_for('index') }}">Lobby</a>
+      <a href="{{ url_for('games') }}">Games</a>
+      <a href="{{ url_for('playlist') }}">Playlist</a>
+      <a href="{{ url_for('projetos') }}">Meus Projetos</a>
+      <a href="{{ url_for('anuncios') }}">Anúncios</a>
+      <a href="{{ url_for('easteregg') }}">Esteregg</a>
+    </nav>
+  </header>
+  <main>
+    <div class="level">Nível: <span id="level">1</span></div>
+    <div class="hint">Dica: <span id="hint"></span></div>
+    <div class="status">Erros: <span id="mistakes">0</span>/6</div>
+    <div class="word" id="word"></div>
+    <div class="letters" id="letters"></div>
+    <div style="text-align:center;margin-top:10px;"><button id="reset" class="btn">Recomeçar</button></div>
+  </main>
+  <footer><p>&copy; 2026 - Meu Portfólio</p></footer>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+  <script>
+    const wordLists = {
+      1: [
+        { word: 'GATO', hint: 'Animal de estimação' },
+        { word: 'SOL', hint: 'Estrela do sistema solar' },
+        { word: 'AGUA', hint: 'Líquido essencial' }
+      ],
+      2: [
+        { word: 'VAPORWAVE', hint: 'Estilo musical retrô' },
+        { word: 'SATURNO', hint: 'Planeta com anéis' },
+        { word: 'RETRO', hint: 'Estilo antigo' }
+      ],
+      3: [
+        { word: 'PROGRAMACAO', hint: 'Atividade de escrever código' },
+        { word: 'ALGORITMO', hint: 'Sequência de passos' },
+        { word: 'INTERFACE', hint: 'Parte visível do software' }
+      ]
+    };
+    let currentLevel = 1;
+    let answer = '';
+    let hint = '';
+    let mistakes = 0;
+    const maxMistakes = 6;
+    const guessed = new Set();
+
+    function pick() {
+      const list = wordLists[currentLevel] || wordLists[1];
+      const item = list[Math.floor(Math.random() * list.length)];
+      answer = item.word;
+      hint = item.hint;
+      mistakes = 0;
+      guessed.clear();
+      document.getElementById('level').textContent = currentLevel;
+      document.getElementById('hint').textContent = hint;
+      document.getElementById('mistakes').textContent = mistakes;
+      render();
+    }
+
+    function render() {
+      const wordEl = document.getElementById('word');
+      wordEl.textContent = answer.split('').map(l => guessed.has(l) ? l : '_').join(' ');
+      const lettersEl = document.getElementById('letters');
+      lettersEl.innerHTML = '';
+      for (let i = 65; i < 91; i++) {
+        const ch = String.fromCharCode(i);
+        const btn = document.createElement('button');
+        btn.textContent = ch;
+        btn.disabled = guessed.has(ch);
+        btn.addEventListener('click', () => guess(ch));
+        lettersEl.appendChild(btn);
+      }
+    }
+
+    function guess(ch) {
+      guessed.add(ch);
+      if (!answer.includes(ch)) {
+        mistakes++;
+        document.getElementById('mistakes').textContent = mistakes;
+        document.getElementById('word').classList.add('shake');
+        setTimeout(() => document.getElementById('word').classList.remove('shake'), 500);
+        try { playWrong(); } catch (e) {}
+      } else {
+        try { playCorrect(); } catch (e) {}
+      }
+      render();
+      checkEnd();
+    }
+
+    function checkEnd() {
+      if (!document.getElementById('word').textContent.includes('_')) {
+        try { playWin(); } catch (e) {}
+        alert('Você ganhou! Avançando para o próximo nível.');
+        currentLevel++;
+        pick();
+      }
+      if (mistakes >= maxMistakes) {
+        try { playLose(); } catch (e) {}
+        alert('Perdeu! Resposta: ' + answer + '. Voltando ao nível 1.');
+        currentLevel = 1;
+        pick();
+      }
+    }
+
+    document.getElementById('reset').addEventListener('click', () => { currentLevel = 1; pick(); });
+    pick();
+  </script>
+</body>
+</html>

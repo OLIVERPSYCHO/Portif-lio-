@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Snake - Meu Portfólio</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    #gameCanvas {
+      border: 2px outset #c0c0c0;
+      background: linear-gradient(45deg, #000, #111);
+      display: block;
+      margin: 20px auto;
+      animation: fadeIn 1s;
+      box-shadow: 0 0 20px rgba(255,0,255,0.5);
+    }
+    .score {
+      text-align: center;
+      font-size: 18px;
+      margin: 10px;
+      animation: fadeIn 0.5s;
+      color: #00ffff;
+    }
+    .mobile-controls {
+      text-align: center;
+      margin: 20px;
+    }
+    .virtual-joystick button {
+      padding: 15px;
+      margin: 5px;
+      border-radius: 50%;
+      border: 2px solid #ff00ff;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      font-size: 20px;
+      transition: all 0.3s;
+    }
+    .virtual-joystick button:hover {
+      background: rgba(255,0,255,0.3);
+      transform: scale(1.1);
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</head>
+<body class="vaporwave">
+  <header>
+    <h1>🐍 Snake Game</h1>
+    <nav>
+      <a href="{{ url_for('index') }}">Lobby</a>
+      <a href="{{ url_for('games') }}">Games</a>
+      <a href="{{ url_for('playlist') }}">Playlist</a>
+      <a href="{{ url_for('projetos') }}">Meus Projetos</a>
+      <a href="{{ url_for('anuncios') }}">Anúncios</a>
+      <a href="{{ url_for('easteregg') }}">Esteregg</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="score">Pontuação: <span id="score">0</span></div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <p>Use as setas do teclado ou toque nos controles móveis para jogar.</p>
+
+    <div class="mobile-controls" id="mobile-controls" style="display: none;">
+      <div class="controls-layout">
+        <div class="virtual-joystick">
+          <button id="up">↑</button>
+          <div>
+            <button id="left">←</button>
+            <button id="right">→</button>
+          </div>
+          <button id="down">↓</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 - Meu Portfólio</p>
+  </footer>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreElement = document.getElementById('score');
+
+    const grid = 20;
+    let snake = [{x: 200, y: 200}];
+    let food = {x: 100, y: 100};
+    let dx = 0;
+    let dy = 0;
+    let score = 0;
+
+    // smoother movement using time-based loop
+    let lastTime = 0;
+    const speed = 8; // moves per second
+    const stepMs = 1000 / speed;
+
+    function draw() {
+      // subtle trail for motion effect
+      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // grid background
+      ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+      for (let x = 0; x < canvas.width; x += grid) {
+        ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += grid) {
+        ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke();
+      }
+
+      // Draw food with glow
+      ctx.fillStyle = '#ff4d4d';
+      roundRect(ctx, food.x, food.y, grid, grid, 4, true, false);
+      ctx.shadowColor = 'rgba(255,77,77,0.6)';
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = '#ff4d4d';
+      roundRect(ctx, food.x, food.y, grid, grid, 4, true, false);
+      ctx.shadowBlur = 0;
+
+      // Draw snake segments with gradient
+      for (let i = 0; i < snake.length; i++) {
+        const segment = snake[i];
+        const grad = ctx.createLinearGradient(segment.x, segment.y, segment.x+grid, segment.y+grid);
+        grad.addColorStop(0, i===0 ? '#aaff00' : '#00ff99');
+        grad.addColorStop(1, '#00ffaa');
+        ctx.fillStyle = grad;
+        roundRect(ctx, segment.x, segment.y, grid, grid, 4, true, false);
+      }
+    }
+
+    function roundRect(ctx, x, y, w, h, r, fill, stroke) {
+      if (r === undefined) r = 5;
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+      if (fill) ctx.fill();
+      if (stroke) ctx.stroke();
+    }
+
+    function update() {
+      const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+
+      // Wall collision
+      if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+        resetGame();
+        return;
+      }
+
+      // Self collision
+      for (let segment of snake) {
+        if (head.x === segment.x && head.y === segment.y) {
+          resetGame();
+          return;
+        }
+      }
+
+      snake.unshift(head);
+
+      // Eat food
+      if (head.x === food.x && head.y === food.y) {
+        score++;
+        scoreElement.textContent = score;
+        try{ playEat(); }catch(e){}
+        food = {
+          x: Math.floor(Math.random() * (canvas.width / grid)) * grid,
+          y: Math.floor(Math.random() * (canvas.height / grid)) * grid
+        };
+      } else {
+        snake.pop();
+      }
+    }
+
+    function resetGame() {
+      snake = [{x: Math.floor(canvas.width/2/grid)*grid, y: Math.floor(canvas.height/2/grid)*grid}];
+      dx = 0;
+      dy = 0;
+      score = 0;
+      scoreElement.textContent = score;
+      food = {x: Math.floor(Math.random() * (canvas.width / grid)) * grid, y: Math.floor(Math.random() * (canvas.height / grid)) * grid};
+      try{ playCrash(); }catch(e){}
+    }
+
+    // Keyboard controls
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp' && dy === 0) { dx = 0; dy = -grid; }
+      if (e.key === 'ArrowDown' && dy === 0) { dx = 0; dy = grid; }
+      if (e.key === 'ArrowLeft' && dx === 0) { dx = -grid; dy = 0; }
+      if (e.key === 'ArrowRight' && dx === 0) { dx = grid; dy = 0; }
+    });
+
+    // Mobile controls
+    document.getElementById('up').addEventListener('click', () => { if (dy === 0) { dx = 0; dy = -grid; } });
+    document.getElementById('down').addEventListener('click', () => { if (dy === 0) { dx = 0; dy = grid; } });
+    document.getElementById('left').addEventListener('click', () => { if (dx === 0) { dx = -grid; dy = 0; } });
+    document.getElementById('right').addEventListener('click', () => { if (dx === 0) { dx = grid; dy = 0; } });
+
+    function loop(time) {
+      if (!lastTime) lastTime = time;
+      const delta = time - lastTime;
+      if (delta >= stepMs) {
+        update();
+        lastTime = time;
+      }
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    // show mobile controls on small screens
+    function checkMobileControls() {
+      const mc = document.getElementById('mobile-controls');
+      if (window.innerWidth <= 768) mc.style.display = 'block'; else mc.style.display = 'none';
+    }
+    window.addEventListener('resize', checkMobileControls);
+    checkMobileControls();
+
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
